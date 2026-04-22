@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Salesforce AddMe – Settings</title>
+  <link rel="stylesheet" href="options.css" />
+</head>
+<body>
+  <div class="page-wrapper">
+    <!-- ── Sidebar ─────────────────────────────────────────────── -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <img src="icons/icon48.png" alt="" width="28" height="28" />
+        <span>Salesforce AddMe</span>
+      </div>
+      <nav class="sidebar-nav">
+        <button class="nav-item nav-item--active" data-tab="instances">
+          <span class="nav-icon">🏢</span> Instances
+        </button>
+        <button class="nav-item" data-tab="about">
+          <span class="nav-icon">ℹ</span> About
+        </button>
+      </nav>
+    </aside>
+
+    <!-- ── Main content ────────────────────────────────────────── -->
+    <main class="content">
+
+      <!-- ─ Instances Tab ─────────────────────────────────────── -->
+      <section id="tabInstances" class="tab-panel">
+        <div class="panel-header">
+          <h1>Salesforce Instances</h1>
+          <button id="btnAddInstance" class="btn btn--primary">
+            + Add Instance
+          </button>
+        </div>
+
+        <!-- Instance list -->
+        <div id="instanceList" class="instance-list">
+          <p class="empty-msg" id="noInstancesMsg">
+            No instances configured.  Click <strong>Add Instance</strong> to get started.
+          </p>
+        </div>
+
+        <!-- ─ Add / Edit instance form ────────────────────────── -->
+        <div id="instanceForm" class="instance-form card hidden">
+          <h2 id="formTitle">Add Salesforce Instance</h2>
+
+          <div class="form-group">
+            <label class="form-label" for="iName">Display Name *</label>
+            <input id="iName" type="text" class="form-input"
+              placeholder="e.g. Production, Sandbox" autocomplete="off" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="iLoginUrl">Login URL *</label>
+            <input id="iLoginUrl" type="url" class="form-input"
+              placeholder="https://login.salesforce.com" autocomplete="off" />
+            <p class="field-hint">
+              Use <code>https://login.salesforce.com</code> for Production,
+              <code>https://test.salesforce.com</code> for Sandbox, or your
+              custom domain (e.g. <code>https://mycompany.my.salesforce.com</code>).
+            </p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="iClientId">Connected App Client ID *</label>
+            <input id="iClientId" type="text" class="form-input"
+              placeholder="3MVG9…" autocomplete="off" />
+            <p class="field-hint">
+              Register a Connected App in Salesforce Setup and paste its Consumer Key here.
+            </p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">OAuth Callback URL</label>
+            <div class="copy-row">
+              <input id="iCallbackUrl" type="text" class="form-input" readonly />
+              <button id="btnCopyCallback" class="btn btn--secondary btn--sm">Copy</button>
+            </div>
+            <p class="field-hint">
+              Add this URL to your Connected App's <em>Callback URLs</em> list in Salesforce.
+            </p>
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="iRememberTokens" />
+              Remember authentication between browser sessions
+              <span class="hint-inline">(stores encrypted refresh token)</span>
+            </label>
+          </div>
+
+          <div class="form-actions">
+            <button id="btnSaveInstance"  class="btn btn--primary">Save &amp; Authenticate</button>
+            <button id="btnCancelForm"    class="btn btn--ghost">Cancel</button>
+          </div>
+
+          <div id="formError" class="notice notice--error hidden"></div>
+        </div>
+      </section>
+
+      <!-- ─ About Tab ─────────────────────────────────────────── -->
+      <section id="tabAbout" class="tab-panel hidden">
+        <div class="panel-header">
+          <h1>About Salesforce AddMe</h1>
+        </div>
+        <div class="card about-card">
+          <p>
+            <strong>Salesforce AddMe</strong> lets you capture selected text from any
+            web page and push it directly to your Salesforce org as a structured record —
+            Leads, Contacts, Accounts, or any custom object.
+          </p>
+          <h3>Privacy &amp; Data Handling</h3>
+          <ul>
+            <li>Access tokens are stored in session memory only and cleared when the browser closes.</li>
+            <li>Refresh tokens are encrypted with AES-256-GCM before being written to local storage.</li>
+            <li>Selected text is cached only in session memory for the duration of one workflow.</li>
+            <li>No data is ever sent to third-party servers.</li>
+          </ul>
+          <h3>Setting Up a Connected App</h3>
+          <ol>
+            <li>In Salesforce Setup, search for <strong>App Manager</strong>.</li>
+            <li>Click <strong>New Connected App</strong>.</li>
+            <li>Enable OAuth settings and add the Callback URL shown in the form above.</li>
+            <li>Select the scopes: <code>api</code>, <code>refresh_token</code>, <code>offline_access</code>.</li>
+            <li>Save and copy the <strong>Consumer Key</strong> into the Client ID field.</li>
+          </ol>
+          <p class="version-text" id="versionText"></p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ── Loading overlay ──────────────────────────────────────── -->
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="spinner"></div>
+    <span id="loadingMsg">Loading…</span>
+  </div>
+
+  <!-- ── Toast ───────────────────────────────────────────────── -->
+  <div id="toast" class="toast hidden" role="alert" aria-live="assertive"></div>
+
+  <script type="module" src="options.js"></script>
+</body>
+</html>
