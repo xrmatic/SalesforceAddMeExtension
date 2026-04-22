@@ -50,7 +50,10 @@ function setupContextMenu() {
   });
 }
 
-chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+/** Track the ID of an already-open standalone popup window to avoid duplicates. */
+let popupWindowId = null;
+
+chrome.contextMenus.onClicked.addListener(async (info, _tab) => {
   if (info.menuItemId !== MENU_IDS.SEND_TO_SF) return;
 
   const selectedText = info.selectionText;
@@ -63,17 +66,34 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
     console.error('[AddMe] Failed to cache selected text:', err);
   }
 
-  // Open the popup via an action – the popup will read from session storage.
-  // We can't directly open the popup, so we open a side-panel-style popup page.
-  chrome.action.openPopup().catch(() => {
-    // openPopup is not available in all contexts; open as a standalone window.
-    chrome.windows.create({
+  // Try the built-in action popup first.
+  chrome.action.openPopup().catch(async () => {
+    // openPopup is not available in all contexts (e.g. when no active tab has
+    // focus).  Fall back to a standalone popup window, but focus an existing
+    // one if it is still open to avoid accumulating duplicate windows.
+    if (popupWindowId !== null) {
+      try {
+        await chrome.windows.update(popupWindowId, { focused: true });
+        return;
+      } catch {
+        // Window was closed since we last tracked it.
+        popupWindowId = null;
+      }
+    }
+
+    const win = await chrome.windows.create({
       url:    chrome.runtime.getURL('popup.html'),
       type:   'popup',
       width:  480,
       height: 640,
     });
+    popupWindowId = win.id;
   });
+});
+
+/** Clear the tracked window ID when the user closes it. */
+chrome.windows.onRemoved.addListener((windowId) => {
+  if (windowId === popupWindowId) popupWindowId = null;
 });
 
 // ─── Connection health polling ────────────────────────────────────────────────

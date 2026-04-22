@@ -234,7 +234,8 @@ export async function cacheSelectedText(text) {
 export async function consumeSelectedText() {
   const data = await sessionGet([SESSION_KEYS.SELECTED_TEXT]);
   const text = data[SESSION_KEYS.SELECTED_TEXT] ?? null;
-  if (text !== null) await sessionRemove([SESSION_KEYS.SELECTED_TEXT]);
+  // Use typeof check so that a legitimately empty string is handled correctly.
+  if (typeof text === 'string') await sessionRemove([SESSION_KEYS.SELECTED_TEXT]);
   return text;
 }
 

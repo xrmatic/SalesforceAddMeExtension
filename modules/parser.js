@@ -23,13 +23,23 @@ const RE = {
   github:   /https?:\/\/(?:www\.)?github\.com\/[A-Za-z0-9_\-]+\/?/gi,
   url:      /https?:\/\/(?:www\.)?[-A-Za-z0-9@:%._+~#=]{1,256}\.[A-Za-z0-9()]{1,6}\b[-A-Za-z0-9()@:%_+.~#?&/=]*/g,
 
-  // Full street address  (e.g. "123 Main Street", "456 Oak Ave Ste 5")
+  // Full street address pattern.  Built from these named sub-parts:
+  //   \b\d{1,6}            — house number (up to 6 digits)
+  //   \s+                  — whitespace separator
+  //   (?:[A-Za-z0-9#.]+\s+){1,6}  — 1-6 street-name tokens (handles multi-word names)
+  //   (?:Street|St|…|Trl)  — required street-type suffix
+  //   \b\.?                — word boundary, optional trailing period
+  //   (?:\s+(?:Ste|…)\s*\w+)?  — optional unit/suite/apt qualifier
+  // Examples: "123 Main Street", "456 Oak Ave Ste 5", "1 Infinite Loop"
   streetAddress:
     /\b\d{1,6}\s+(?:[A-Za-z0-9#.]+\s+){1,6}(?:Street|St|Avenue|Ave|Boulevard|Blvd|Drive|Dr|Road|Rd|Lane|Ln|Court|Ct|Place|Pl|Way|Parkway|Pkwy|Highway|Hwy|Circle|Cir|Loop|Trail|Trl)\b\.?(?:\s+(?:Ste|Suite|Apt|Apt\.|Unit|#)\s*\w+)?/gi,
 
-  // City, State  (e.g. "San Francisco, CA" or "Austin, Texas")
+  // City, State  — state must be a 2-letter abbreviation (validated against
+  // US_STATES / CA provinces in extractAddressComponents).  Restricting to
+  // 2-letter codes avoids false positives where a proper noun like "Mountain"
+  // is consumed as a long-form state name, corrupting subsequent matches.
   cityState:
-    /\b([A-Z][a-z]{1,20}(?:\s[A-Z][a-z]{1,20})?),\s*([A-Z]{2}|[A-Z][a-z]{3,20})\b/g,
+    /\b([A-Z][a-z]{1,20}(?:\s[A-Z][a-z]{1,20})?),\s*([A-Z]{2})\b/g,
 
   zipCode: /\b\d{5}(?:-\d{4})?\b/g,
 
@@ -203,14 +213,17 @@ function extractAddressComponents(text) {
   const streetAddresses = extractAll(text, RE.streetAddress);
   const zipCodes        = extractAll(text, RE.zipCode);
 
-  // City / State pairs.
+  // City / State pairs.  Validate the state token against the known set so
+  // patterns like "Jane Doe, VP" are not mistaken for "City, State".
   const cities  = [];
   const states  = [];
   const csRe    = new RegExp(RE.cityState.source, RE.cityState.flags);
   let m;
   while ((m = csRe.exec(text)) !== null) {
+    const stateCandidate = m[2].trim().toUpperCase();
+    if (!US_STATES.has(stateCandidate)) continue; // reject non-state tokens
     cities.push(m[1].trim());
-    states.push(m[2].trim().toUpperCase());
+    states.push(stateCandidate);
   }
 
   return {

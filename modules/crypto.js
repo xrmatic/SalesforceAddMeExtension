@@ -77,6 +77,19 @@ export function generateInstallSecret() {
 // ─── Key derivation ───────────────────────────────────────────────────────────
 
 /**
+ * A fixed, non-zero HKDF salt.  Per RFC 5869 a fixed known salt is preferable
+ * to an all-zeros salt because it provides a stronger PRF guarantee.
+ * This value is application-specific and must never change once deployed,
+ * as changing it would invalidate all previously encrypted data.
+ */
+const HKDF_SALT = new Uint8Array([
+  0x53, 0x46, 0x41, 0x64, 0x64, 0x4d, 0x65, 0x2d,  // "SFAddMe-"
+  0x73, 0x61, 0x6c, 0x74, 0x2d, 0x76, 0x31, 0x00,  // "salt-v1\0"
+  0x9f, 0x3c, 0x7a, 0x11, 0xd4, 0x82, 0xbe, 0xf0,  // random fixed bytes
+  0xc1, 0x55, 0x6e, 0x29, 0x3a, 0xd7, 0x04, 0xe8,
+]);
+
+/**
  * Derive an AES-GCM key from the install secret (hex) using HKDF-SHA-256.
  * @param {string} secretHex  - The 64-char hex install secret.
  * @param {Uint8Array} info   - Context/purpose bytes (domain separation).
@@ -94,12 +107,12 @@ async function deriveAesKey(secretHex, info) {
     ['deriveKey'],
   );
 
-  // Derive the final AES-GCM key.
+  // Derive the final AES-GCM key using a fixed non-zero salt.
   return crypto.subtle.deriveKey(
     {
-      name:   'HKDF',
-      hash:   'SHA-256',
-      salt:   new Uint8Array(32), // zero salt – the info provides domain separation
+      name: 'HKDF',
+      hash: 'SHA-256',
+      salt: HKDF_SALT,
       info,
     },
     hkdfKey,

@@ -146,6 +146,13 @@ export async function findDuplicates(instanceId, objectName, record) {
   const keyField = DUPLICATE_KEY_FIELDS[objectName];
   if (!keyField) return []; // No key field configured for this object.
 
+  // Validate keyField is a safe identifier before interpolating into SOQL.
+  try {
+    assertSafeFieldName(keyField);
+  } catch {
+    return [];
+  }
+
   const keyValue = record[keyField];
   if (!keyValue) return [];
 
@@ -281,6 +288,20 @@ export async function soslSearch(instanceId, searchTerm, objects = ['Account', '
 /** Escape a value for use inside a SOQL string literal. */
 function escapeSoqlValue(str) {
   return str.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
+/**
+ * Validate that a field name is a safe Salesforce API identifier before
+ * interpolating it into a SOQL query.  Valid Salesforce field API names
+ * consist of letters, digits, and underscores, optionally ending with __c /
+ * __r / __x / __pc (relationship suffix).
+ * Throws if the name does not match so callers fail loudly rather than
+ * silently building a malformed query.
+ */
+function assertSafeFieldName(name) {
+  if (!/^[A-Za-z][A-Za-z0-9_]*(?:__[crxp]c?)?$/.test(name)) {
+    throw new Error(`Unsafe Salesforce field name rejected: "${name}"`);
+  }
 }
 
 /** Escape a term for use inside a SOSL FIND clause. */

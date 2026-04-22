@@ -307,7 +307,11 @@ function makeBtn(label, cls, onClick) {
 }
 
 function generateId() {
-  return `inst_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+  // Use crypto.getRandomValues() for a collision-resistant, cryptographically
+  // random identifier (avoids the weakness of Math.random()).
+  const randomBytes = crypto.getRandomValues(new Uint8Array(6));
+  const randomHex   = Array.from(randomBytes).map((b) => b.toString(16).padStart(2, '0')).join('');
+  return `inst_${Date.now().toString(36)}_${randomHex}`;
 }
 
 function escapeHtml(str) {

@@ -29,18 +29,6 @@
   }
 
   /**
-   * Listen for messages from the popup / background asking for the current
-   * selection.  We respond synchronously so no persistent listeners linger.
-   */
-  chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-    if (message.type === 'GET_SELECTED_TEXT') {
-      const text = getSelectedText();
-      sendResponse({ text });
-      return false; // synchronous response
-    }
-  });
-
-  /**
    * When the page loses focus (user switches to popup), save the selection.
    * This handles the case where the selection is cleared by the browser when
    * focus leaves the page.
@@ -53,9 +41,16 @@
   });
 
   /**
-   * Also respond with the last-known selection (captured before focus left).
+   * Single combined message listener for all message types from the popup /
+   * background.  Using two separate listeners would cause the second to
+   * silently override the first in MV3 content scripts.
    */
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+    if (message.type === 'GET_SELECTED_TEXT') {
+      sendResponse({ text: getSelectedText() });
+      return false; // synchronous response
+    }
+
     if (message.type === 'GET_LAST_SELECTED_TEXT') {
       sendResponse({ text: lastSelection });
       return false;

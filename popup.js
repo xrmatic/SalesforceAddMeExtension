@@ -310,14 +310,16 @@ function renderFieldRows() {
     input.setAttribute('aria-label', row.sfField);
     input.addEventListener('input', () => { fieldRows[idx].value = input.value; });
 
-    // Remove button
+    // Remove button — capture sfField by value so the closure is not stale
+    // after the array is mutated and re-rendered.
+    const sfFieldKey = row.sfField;
     const removeBtn = document.createElement('button');
     removeBtn.className   = 'field-remove-btn';
     removeBtn.textContent = '✕';
     removeBtn.title       = 'Remove field';
     removeBtn.setAttribute('aria-label', `Remove ${row.sfField}`);
     removeBtn.addEventListener('click', () => {
-      fieldRows.splice(idx, 1);
+      fieldRows = fieldRows.filter((r) => r.sfField !== sfFieldKey);
       renderFieldRows();
     });
 
@@ -541,7 +543,10 @@ els.btnBack.addEventListener('click', () => {
 });
 
 // Periodically refresh connection badge while popup is open.
-setInterval(refreshConnectionStatus, 30_000);
+// Store the timer ID so it can be cleared when the popup unloads, preventing
+// accumulation of intervals across multiple popup open/close cycles.
+const connectionPollInterval = setInterval(refreshConnectionStatus, 30_000);
+window.addEventListener('unload', () => clearInterval(connectionPollInterval));
 
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
 
