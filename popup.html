@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Salesforce AddMe</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <!-- ── Header ─────────────────────────────────────── -->
+  <header class="app-header">
+    <img src="icons/icon48.png" alt="AddMe" class="logo" width="24" height="24" />
+    <h1 class="app-title">Salesforce AddMe</h1>
+    <div class="header-actions">
+      <span id="connectionBadge" class="badge badge--offline" title="Connection status">●</span>
+      <button id="btnOptions" class="icon-btn" title="Settings" aria-label="Open settings">⚙</button>
+    </div>
+  </header>
+
+  <!-- ── Not connected notice ───────────────────────── -->
+  <section id="noInstanceSection" class="section hidden">
+    <div class="notice notice--warn">
+      <p>No Salesforce instance configured.</p>
+      <button id="btnGoOptions" class="btn btn--primary btn--full">Open Settings</button>
+    </div>
+  </section>
+
+  <!-- ── Authentication notice ─────────────────────── -->
+  <section id="authSection" class="section hidden">
+    <div class="notice notice--warn">
+      <p id="authMsg">Please authenticate to continue.</p>
+      <button id="btnGoAuth" class="btn btn--primary btn--full">Authenticate</button>
+    </div>
+  </section>
+
+  <!-- ── Main workflow ──────────────────────────────── -->
+  <main id="mainSection" class="hidden">
+
+    <!-- Step 1: Selected text preview -->
+    <section class="section" id="step1">
+      <div class="step-header">
+        <span class="step-badge">1</span>
+        <h2 class="step-title">Selected Text</h2>
+      </div>
+      <textarea
+        id="selectedText"
+        class="text-input"
+        rows="4"
+        placeholder="Select text on the page or paste here…"
+        aria-label="Input text to parse"
+      ></textarea>
+      <button id="btnParse" class="btn btn--primary btn--full">
+        Parse &amp; Map Fields ▶
+      </button>
+    </section>
+
+    <!-- Step 2: Object selector + field mapping -->
+    <section class="section hidden" id="step2">
+      <div class="step-header">
+        <span class="step-badge">2</span>
+        <h2 class="step-title">Object &amp; Field Mapping</h2>
+      </div>
+
+      <label class="form-label" for="objectSelect">Salesforce Object</label>
+      <select id="objectSelect" class="form-select" aria-label="Select Salesforce object">
+        <option value="">Loading objects…</option>
+      </select>
+
+      <div id="fieldsContainer" class="fields-container">
+        <!-- Dynamically generated field rows -->
+      </div>
+
+      <button id="btnCheckDuplicates" class="btn btn--secondary btn--full">
+        Check for Duplicates
+      </button>
+    </section>
+
+    <!-- Step 3: Duplicate results (optional) -->
+    <section class="section hidden" id="step3">
+      <div class="step-header">
+        <span class="step-badge">3</span>
+        <h2 class="step-title">Existing Records</h2>
+      </div>
+      <div id="duplicatesContainer" class="duplicates-list"></div>
+      <p class="hint" id="noDuplicatesHint">No existing records found – you can create a new record.</p>
+    </section>
+
+    <!-- Step 4: Submit -->
+    <section class="section" id="step4">
+      <div class="step-header">
+        <span class="step-badge">4</span>
+        <h2 class="step-title">Submit to Salesforce</h2>
+      </div>
+
+      <div id="upsertOptions" class="upsert-options hidden">
+        <label class="form-label">Action</label>
+        <label class="radio-label">
+          <input type="radio" name="upsertMode" value="create" checked />
+          Create new record
+        </label>
+        <label class="radio-label" id="updateOptionLabel">
+          <input type="radio" name="upsertMode" value="update" id="updateRadio" />
+          Update existing: <span id="updateTargetLabel" class="record-label"></span>
+        </label>
+      </div>
+
+      <button id="btnSubmit" class="btn btn--primary btn--full">
+        Send to Salesforce ✓
+      </button>
+
+      <div id="submitResult" class="result hidden"></div>
+    </section>
+
+    <!-- Back / progress controls -->
+    <div class="nav-row">
+      <button id="btnBack" class="btn btn--ghost" aria-label="Back">← Back</button>
+      <span id="progressDots" class="progress-dots"></span>
+    </div>
+  </main>
+
+  <!-- ── Loading overlay ────────────────────────────── -->
+  <div id="loadingOverlay" class="loading-overlay hidden" aria-live="polite" aria-busy="true">
+    <div class="spinner"></div>
+    <span id="loadingMsg">Loading…</span>
+  </div>
+
+  <!-- ── Error toast ────────────────────────────────── -->
+  <div id="errorToast" class="toast hidden" role="alert" aria-live="assertive"></div>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>
